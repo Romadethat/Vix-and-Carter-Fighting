@@ -1,0 +1,107 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #111318;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #f7efe3;
+}
+
+#game-root {
+  position: fixed;
+  inset: 0;
+}
+
+#hud-root {
+  position: fixed;
+  top: 18px;
+  left: 24px;
+  right: 24px;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.hud {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) auto minmax(180px, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.fighter-panel,
+.round-status {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(12, 14, 20, 0.74);
+  padding: 10px 12px;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.24);
+}
+
+.fighter-panel {
+  border-radius: 8px;
+}
+
+.fighter-panel.carter {
+  text-align: right;
+}
+
+.fighter-name {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.health-shell {
+  height: 14px;
+  margin-top: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.health-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #38d47a, #f4ca4f);
+}
+
+.state-label,
+.round-status span {
+  display: block;
+  margin-top: 6px;
+  color: rgba(247, 239, 227, 0.78);
+  font-size: 12px;
+}
+
+.round-status {
+  min-width: 190px;
+  text-align: center;
+  border-radius: 8px;
+}
+
+#debug-log {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  display: none;
+  width: min(520px, calc(100vw - 36px));
+  max-height: 220px;
+  overflow: hidden;
+  z-index: 4;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  background: rgba(5, 8, 12, 0.82);
+  padding: 12px;
+  color: #d8f7ff;
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+#debug-log.visible {
+  display: block;
+}

@@ -283,8 +283,6 @@ function canBlock(defender: Fighter, attacker: Fighter): boolean {
   return (
     defender.state === 'block' &&
     !isAttacking(defender) &&
-    defender.state !== 'hitstun' &&
-    defender.state !== 'ko' &&
     isFacingAttacker(defender.facing, defender.x, attacker.x)
   );
 }
