@@ -60,4 +60,43 @@ describe('round simulation', () => {
     updateRound(round, 70, { vix: none, carter: none });
     expect(round.fighters.vix.state).toBe('heavyStartup');
   });
+
+  it('uses tuned movement values for snappier ground and jump feel', () => {
+    const round = createRoundState();
+    const startX = round.fighters.vix.x;
+
+    updateRound(round, 100, { vix: { ...none, right: true }, carter: none });
+    expect(round.fighters.vix.x - startX).toBeCloseTo(24, 1);
+
+    updateRound(round, 16, { vix: { ...none, jump: true }, carter: none });
+    expect(round.fighters.vix.grounded).toBe(false);
+    expect(round.fighters.vix.vy).toBeLessThan(-500);
+  });
+
+  it('sets visible hit feedback and differentiated hit pause on successful hits', () => {
+    const round = createRoundState();
+    round.fighters.vix.x = 420;
+    round.fighters.carter.x = 462;
+
+    updateRound(round, 16, { vix: { ...none, heavy: true }, carter: none });
+    updateRound(round, 170, { vix: none, carter: none });
+
+    expect(round.hitPauseMs).toBe(92);
+    expect(round.fighters.carter.flash.kind).toBe('hit');
+    expect(round.fighters.carter.flash.remainingMs).toBeGreaterThan(0);
+    expect(round.fighters.carter.state).toBe('hitstun');
+  });
+
+  it('sets visible block feedback and reduced knockback on blocked hits', () => {
+    const round = createRoundState();
+    round.fighters.vix.x = 420;
+    round.fighters.carter.x = 462;
+
+    updateRound(round, 16, { vix: { ...none, light: true }, carter: { ...none, block: true } });
+    updateRound(round, 70, { vix: none, carter: { ...none, block: true } });
+
+    expect(round.fighters.carter.flash.kind).toBe('block');
+    expect(round.fighters.carter.health).toBe(98);
+    expect(Math.abs(round.fighters.carter.vx)).toBeLessThan(80);
+  });
 });

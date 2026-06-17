@@ -20,6 +20,8 @@ export function createRoundState(): RoundState {
 }
 
 export function updateRound(round: RoundState, deltaMs: number, input: Record<FighterId, FighterActions>): void {
+  updateFlashTimers(round, deltaMs);
+
   if (round.winner) {
     round.koFreezeMs = Math.max(0, round.koFreezeMs - deltaMs);
     return;
@@ -43,6 +45,23 @@ export function updateRound(round: RoundState, deltaMs: number, input: Record<Fi
 
   resolveBodyPush(round.fighters.vix, round.fighters.carter);
   resolveHits(round);
+}
+
+function updateFlashTimers(round: RoundState, deltaMs: number): void {
+  for (const id of fighterIds) {
+    const flash = round.fighters[id].flash;
+
+    if (flash.remainingMs <= 0) {
+      flash.kind = 'none';
+      continue;
+    }
+
+    flash.remainingMs = Math.max(0, flash.remainingMs - deltaMs);
+
+    if (flash.remainingMs === 0) {
+      flash.kind = 'none';
+    }
+  }
 }
 
 function updateFacing(round: RoundState): void {
@@ -249,17 +268,20 @@ function applyHit(round: RoundState, attacker: Fighter, defender: Fighter, attac
   const blocked = canBlock(defender, attacker);
   const damage = blocked ? config.blockDamage : config.damage;
   defender.health = Math.max(0, defender.health - damage);
-  defender.vx = attacker.facing * config.knockback * (blocked ? 0.35 : 1);
-  defender.vy = blocked ? 0 : -80;
+  defender.vx = attacker.facing * config.knockback * (blocked ? combatConfig.feedback.blockKnockbackScale : 1);
+  defender.vy = blocked ? 0 : attack === 'heavy' ? combatConfig.feedback.heavyHitLift : combatConfig.feedback.lightHitLift;
+  defender.lastHitBy = attack;
   attacker.hasHitThisAttack = true;
-  round.hitPauseMs = combatConfig.hitPauseMs;
+  round.hitPauseMs = combatConfig.hitPauseMs[attack];
 
   if (blocked) {
+    defender.flash = { kind: 'block', remainingMs: combatConfig.feedback.blockFlashMs };
     round.logs.push({
       kind: 'BLOCK',
       message: `BLOCK: ${defender.label} blocked ${attacker.label} ${attack} | damage=${damage} | ${defender.id}Health=${defender.health}`,
     });
   } else {
+    defender.flash = { kind: 'hit', remainingMs: combatConfig.feedback.hitFlashMs };
     defender.state = 'hitstun';
     defender.stateTimerMs = -config.hitstunMs;
     round.logs.push({

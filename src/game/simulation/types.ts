@@ -17,6 +17,7 @@ export type FighterState =
 
 export type Facing = -1 | 1;
 export type AttackKind = 'light' | 'heavy';
+export type FlashKind = 'none' | 'hit' | 'block';
 
 export interface Rect {
   x: number;
@@ -45,6 +46,11 @@ export interface AttackConfig {
   hitstunMs: number;
 }
 
+export interface FighterFlash {
+  kind: FlashKind;
+  remainingMs: number;
+}
+
 export interface Fighter {
   id: FighterId;
   label: string;
@@ -61,6 +67,8 @@ export interface Fighter {
   hasHitThisAttack: boolean;
   bufferedAttack: AttackKind | null;
   bufferedAttackMs: number;
+  flash: FighterFlash;
+  lastHitBy: AttackKind | null;
   tint: number;
 }
 

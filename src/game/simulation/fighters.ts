@@ -21,6 +21,8 @@ export function createFighter(id: FighterId): Fighter {
     hasHitThisAttack: false,
     bufferedAttack: null,
     bufferedAttackMs: 0,
+    flash: { kind: 'none', remainingMs: 0 },
+    lastHitBy: null,
     tint: isVix ? 0xff7a3d : 0x4c8dff,
   };
 }
@@ -63,6 +65,22 @@ export function getCurrentAttackKind(fighter: Fighter): AttackKind | null {
 
   if (fighter.state === 'heavyActive') {
     return 'heavy';
+  }
+
+  return null;
+}
+
+export function getAttackPhase(fighter: Fighter): 'startup' | 'active' | 'recovery' | null {
+  if (fighter.state === 'lightStartup' || fighter.state === 'heavyStartup') {
+    return 'startup';
+  }
+
+  if (fighter.state === 'lightActive' || fighter.state === 'heavyActive') {
+    return 'active';
+  }
+
+  if (fighter.state === 'lightRecovery' || fighter.state === 'heavyRecovery') {
+    return 'recovery';
   }
 
   return null;
