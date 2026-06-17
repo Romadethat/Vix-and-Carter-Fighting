@@ -1,9 +1,9 @@
 import Phaser from 'phaser';
 import { combatConfig } from '../config/combatConfig';
 import { InputMapper } from '../input/inputMapper';
-import { getAttackHitbox, getCollisionBox, getHurtbox } from '../simulation/fighters';
+import { getAttackHitbox, getAttackPhase, getCollisionBox, getHurtbox, isAttacking } from '../simulation/fighters';
 import { createRoundState, updateRound } from '../simulation/round';
-import type { Fighter, RoundState } from '../simulation/types';
+import type { AttackKind, Fighter, RoundState } from '../simulation/types';
 import { renderDebugLog } from '../../ui/debugLog';
 import { renderHud } from '../../ui/hud';
 
@@ -111,10 +111,61 @@ export class FightScene extends Phaser.Scene {
       }
 
       sprite.setPosition(fighter.x, fighter.y - 54);
-      sprite.setFillStyle(fighter.state === 'block' ? 0x7fd3ff : fighter.tint);
-      sprite.setScale(fighter.facing, 1);
+      sprite.setFillStyle(this.getFighterTint(fighter));
+      sprite.setAlpha(this.getFighterAlpha(fighter));
+      sprite.setScale(fighter.facing * this.getPoseScaleX(fighter), this.getPoseScaleY(fighter));
       this.nameLabels.get(fighter.id)?.setPosition(fighter.x, fighter.y - 136);
     }
+  }
+
+  private getFighterTint(fighter: Fighter): number {
+    if (fighter.flash.kind === 'hit') {
+      return fighter.lastHitBy === 'heavy' ? 0xfff0f0 : 0xffd76d;
+    }
+
+    if (fighter.flash.kind === 'block') {
+      return 0x91f3ff;
+    }
+
+    if (fighter.state === 'block') {
+      return 0x7fd3ff;
+    }
+
+    return fighter.tint;
+  }
+
+  private getFighterAlpha(fighter: Fighter): number {
+    return getAttackPhase(fighter) === 'recovery' ? 0.82 : 1;
+  }
+
+  private getPoseScaleX(fighter: Fighter): number {
+    const phase = getAttackPhase(fighter);
+
+    if (phase === 'startup') {
+      return combatConfig.poses.startupScaleX;
+    }
+
+    if (phase === 'active') {
+      return combatConfig.poses.activeScaleX;
+    }
+
+    if (phase === 'recovery') {
+      return combatConfig.poses.recoveryScaleX;
+    }
+
+    if (fighter.state === 'block') {
+      return combatConfig.poses.blockScaleX;
+    }
+
+    return 1;
+  }
+
+  private getPoseScaleY(fighter: Fighter): number {
+    if (fighter.state === 'hitstun') {
+      return combatConfig.poses.hitstunScaleY;
+    }
+
+    return 1;
   }
 
   private drawDebug(): void {
@@ -135,6 +186,7 @@ export class FightScene extends Phaser.Scene {
     for (const fighter of Object.values(this.round.fighters)) {
       this.strokeBox(getCollisionBox(fighter), 0xffffff);
       this.strokeBox(getHurtbox(fighter), 0x38d47a);
+      this.drawFeedbackSpark(fighter);
 
       const hitbox = getAttackHitbox(fighter);
 
@@ -154,6 +206,20 @@ export class FightScene extends Phaser.Scene {
     this.debugGraphics?.strokeRect(box.x, box.y, box.width, box.height);
   }
 
+  private drawFeedbackSpark(fighter: Fighter): void {
+    if (!this.debugGraphics || fighter.flash.kind === 'none') {
+      return;
+    }
+
+    const color = fighter.flash.kind === 'block' ? 0x91f3ff : 0xfff0f0;
+    const width = fighter.flash.kind === 'block' ? 26 : 34;
+    const x = fighter.x - width / 2 + fighter.facing * 14;
+    const y = fighter.y - 92;
+
+    this.debugGraphics.fillStyle(color, 0.78);
+    this.debugGraphics.fillRect(x, y, width, 8);
+  }
+
   private updateStateText(fighter: Fighter): void {
     const text = this.stateLabels.get(fighter.id);
 
@@ -161,7 +227,53 @@ export class FightScene extends Phaser.Scene {
       return;
     }
 
-    text.setText(`${fighter.state} HP:${fighter.health}`);
-    text.setPosition(fighter.x - 40, fighter.y - combatConfig.boxes.hurt.height - 52);
+    const phase = getAttackPhase(fighter);
+    const remaining = this.getStateRemainingMs(fighter);
+    const blockActive = fighter.state === 'block' && !isAttacking(fighter);
+
+    text.setText([
+      `state: ${fighter.state}`,
+      `phase: ${phase ?? 'none'} ${remaining}ms`,
+      `hp: ${fighter.health}`,
+      `block: ${blockActive}`,
+      `hitPause: ${Math.ceil(this.round.hitPauseMs)}`,
+    ]);
+    text.setOrigin(0.5, 1);
+    text.setPosition(fighter.x, fighter.y - combatConfig.boxes.hurt.height - 62);
+  }
+
+  private getStateRemainingMs(fighter: Fighter): number {
+    const attack = fighter.activeAttack;
+
+    if (fighter.state === 'hitstun') {
+      return Math.max(0, Math.ceil(-fighter.stateTimerMs));
+    }
+
+    if (!attack) {
+      return 0;
+    }
+
+    const phase = getAttackPhase(fighter);
+    const duration = this.getAttackPhaseDuration(attack, phase);
+
+    return Math.max(0, Math.ceil(duration - fighter.stateTimerMs));
+  }
+
+  private getAttackPhaseDuration(attack: AttackKind, phase: ReturnType<typeof getAttackPhase>): number {
+    if (!phase) {
+      return 0;
+    }
+
+    const config = combatConfig.attacks[attack];
+
+    if (phase === 'startup') {
+      return config.startupMs;
+    }
+
+    if (phase === 'active') {
+      return config.activeMs;
+    }
+
+    return config.recoveryMs;
   }
 }
