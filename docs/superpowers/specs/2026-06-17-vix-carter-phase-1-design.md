@@ -45,10 +45,14 @@ The state machine controls what a fighter can and cannot do during each timing w
 Initial values will live in one tunable combat config file:
 
 - Health: 100 each.
+- Movement: 220px/s walk speed, -520px/s jump velocity, 1400px/s gravity, 900px/s max fall speed, 520px ground Y, 40px left stage bound, 920px right stage bound.
 - Light attack: 90ms startup, 90ms active, 180ms recovery, 8 damage, 2 block damage, 42px range, 120px knockback.
 - Heavy attack: 180ms startup, 120ms active, 320ms recovery, 16 damage, 5 block damage, 62px range, 220px knockback.
 - Hitstun: 220ms for light hits, 320ms for heavy hits.
 - Hit pause: 70ms on successful hits.
+- Input buffer: 100ms for attack inputs entered just before a fighter becomes actionable.
+- KO freeze: 900ms before restart input is accepted.
+- Camera: static arena camera for Phase 1, with no midpoint follow or zoom.
 - Jump: single jump only.
 - Round ends when health reaches 0.
 
@@ -73,12 +77,18 @@ Gameplay state should live outside Phaser scenes. Phaser should render sprites, 
 Core modules:
 
 - `game/simulation`: fighter state, round state, combat update loop, hit detection, damage rules.
-- `game/input`: maps keyboard keys to fighter actions.
+- `game/input`: maps keyboard keys to fighter actions and owns the 100ms attack input buffer.
 - `game/render`: Phaser scenes and visual adapters.
 - `game/assets`: stable asset manifest keys for placeholders now and real art later.
-- `game/config`: tunable movement, attack, damage, hitstun, and box values.
+- `game/config`: tunable movement, attack, damage, hitstun, input buffer, KO freeze, camera, and box values.
 - `ui`: DOM overlay for health bars, round status, and restart prompt.
-- `debug`: toggleable overlay for combat proof and tuning.
+- `debug`: toggleable overlay for combat proof, tuning, and proof logs.
+
+The debug log should print important combat events in a simple readable format:
+
+- `HIT: Vix light -> Carter | blocked=false | damage=8 | carterHealth=92`
+- `BLOCK: Carter blocked Vix heavy | damage=5 | carterHealth=87`
+- `KO: Carter defeated by Vix heavy`
 
 ## Visual Direction
 
@@ -97,15 +107,18 @@ Phase 1 is complete when:
 - The app installs and runs locally.
 - Both fighters can move, jump, attack, block, take damage, and restart.
 - Health bars update accurately.
+- Movement, gravity, stage bounds, attack timing, input buffer, KO freeze, and camera behavior are all configured in one place.
 - Light and heavy attacks have separate startup, active, and recovery timing.
+- Attack input buffering works for a 100ms pre-actionable window.
 - Attacks use temporary hitboxes, not permanent collision overlap.
 - Each attack can only hit once per activation.
 - Blocking only works when the defender is facing the attacker and is not attacking, in hitstun, or KO.
 - A successful hit applies damage, knockback, hitstun, and light hit pause.
-- The round ends reliably at zero health.
+- The round enters a 900ms KO freeze at zero health, then restart is accepted.
 - Combat tuning values live in one config file.
 - A debug overlay can be toggled with `H` or `F1`.
 - The debug overlay shows collision boxes, hurtboxes, active attack hitboxes, facing direction, current state text, and health values.
+- The proof log emits hit, block, and KO events with attacker, defender, attack type, block result, damage, and remaining health.
 - A browser screenshot confirms the arena, fighters, and HUD are visible.
 
 ## Out Of Scope For Phase 1
