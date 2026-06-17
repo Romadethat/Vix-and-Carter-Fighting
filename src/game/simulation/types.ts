@@ -18,6 +18,8 @@ export type FighterState =
 
 export type Facing = -1 | 1;
 export type AttackKind = 'light' | 'heavy';
+export type AttackHeight = 'high' | 'mid' | 'low' | 'overhead';
+export type BlockMode = 'none' | 'standing' | 'crouching';
 export type FlashKind = 'none' | 'hit' | 'block';
 
 export interface Rect {
@@ -38,6 +40,7 @@ export interface FighterActions {
 }
 
 export interface AttackConfig {
+  height: AttackHeight;
   startupMs: number;
   activeMs: number;
   recoveryMs: number;
@@ -71,6 +74,7 @@ export interface Fighter {
   bufferedAttackMs: number;
   flash: FighterFlash;
   lastHitBy: AttackKind | null;
+  blockMode: BlockMode;
   tint: number;
 }
 

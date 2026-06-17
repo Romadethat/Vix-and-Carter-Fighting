@@ -10,6 +10,8 @@ export const combatConfig = {
     groundY: 520,
     stageLeft: 40,
     stageRight: 920,
+    crouchMoveMultiplier: 0,
+    allowCrouchWalk: false,
   },
   inputBufferMs: 100,
   hitPauseMs: {
@@ -23,11 +25,13 @@ export const combatConfig = {
   },
   boxes: {
     collision: { width: 42, height: 108 },
-    hurt: { width: 48, height: 112 },
+    standingHurt: { width: 48, height: 112 },
+    crouchingHurt: { width: 48, height: 68 },
     attackHeight: 54,
   },
   attacks: {
     light: {
+      height: 'mid',
       startupMs: 70,
       activeMs: 85,
       recoveryMs: 170,
@@ -38,6 +42,7 @@ export const combatConfig = {
       hitstunMs: 220,
     },
     heavy: {
+      height: 'mid',
       startupMs: 170,
       activeMs: 120,
       recoveryMs: 340,

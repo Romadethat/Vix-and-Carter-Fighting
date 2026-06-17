@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { combatConfig } from '../game/config/combatConfig';
+import { getHurtbox } from '../game/simulation/fighters';
 import { createRoundState, updateRound } from '../game/simulation/round';
 
 const none = { left: false, right: false, jump: false, crouch: false, block: false, light: false, heavy: false };
@@ -126,5 +128,55 @@ describe('round simulation', () => {
     updateRound(blockingRound, 70, { vix: none, carter: { ...none, block: true } });
     expect(blockingRound.fighters.carter.health).toBe(98);
     expect(blockingRound.logs.at(-1)?.kind).toBe('BLOCK');
+  });
+
+  it('prevents jumping while crouch is held and exits crouch when released', () => {
+    const round = createRoundState();
+
+    updateRound(round, 16, { vix: { ...none, crouch: true, jump: true }, carter: none });
+    expect(round.fighters.vix.state).toBe('crouch');
+    expect(round.fighters.vix.grounded).toBe(true);
+    expect(round.fighters.vix.vy).toBe(0);
+
+    updateRound(round, 16, { vix: none, carter: none });
+    expect(round.fighters.vix.state).toBe('idle');
+
+    updateRound(round, 16, { vix: { ...none, right: true }, carter: none });
+    expect(round.fighters.vix.state).toBe('walk');
+  });
+
+  it('uses a shorter crouching hurtbox without changing floor position', () => {
+    const round = createRoundState();
+    const standing = getHurtbox(round.fighters.vix);
+
+    updateRound(round, 16, { vix: { ...none, crouch: true }, carter: none });
+    const crouching = getHurtbox(round.fighters.vix);
+
+    expect(crouching.height).toBeLessThan(standing.height);
+    expect(crouching.y + crouching.height).toBe(standing.y + standing.height);
+    expect(round.fighters.vix.y).toBe(combatConfig.movement.groundY);
+  });
+
+  it('tags current attacks as mid height', () => {
+    expect(combatConfig.attacks.light.height).toBe('mid');
+    expect(combatConfig.attacks.heavy.height).toBe('mid');
+  });
+
+  it('tracks standing and crouching block modes for mid attacks', () => {
+    const standingRound = createRoundState();
+    standingRound.fighters.vix.x = 420;
+    standingRound.fighters.carter.x = 462;
+    updateRound(standingRound, 16, { vix: { ...none, light: true }, carter: { ...none, block: true } });
+    updateRound(standingRound, 70, { vix: none, carter: { ...none, block: true } });
+    expect(standingRound.fighters.carter.blockMode).toBe('standing');
+    expect(standingRound.logs.at(-1)?.kind).toBe('BLOCK');
+
+    const crouchingRound = createRoundState();
+    crouchingRound.fighters.vix.x = 420;
+    crouchingRound.fighters.carter.x = 462;
+    updateRound(crouchingRound, 16, { vix: { ...none, light: true }, carter: { ...none, crouch: true, block: true } });
+    updateRound(crouchingRound, 70, { vix: none, carter: { ...none, crouch: true, block: true } });
+    expect(crouchingRound.fighters.carter.blockMode).toBe('crouching');
+    expect(crouchingRound.logs.at(-1)?.kind).toBe('BLOCK');
   });
 });

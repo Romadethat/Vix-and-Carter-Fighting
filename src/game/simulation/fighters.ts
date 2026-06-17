@@ -23,6 +23,7 @@ export function createFighter(id: FighterId): Fighter {
     bufferedAttackMs: 0,
     flash: { kind: 'none', remainingMs: 0 },
     lastHitBy: null,
+    blockMode: 'none',
     tint: isVix ? 0xff7a3d : 0x4c8dff,
   };
 }
@@ -32,7 +33,12 @@ export function getCollisionBox(fighter: Fighter): Rect {
 }
 
 export function getHurtbox(fighter: Fighter): Rect {
-  return centeredRect(fighter.x, fighter.y, combatConfig.boxes.hurt.width, combatConfig.boxes.hurt.height);
+  const box = fighter.state === 'crouch' || fighter.blockMode === 'crouching' ? combatConfig.boxes.crouchingHurt : combatConfig.boxes.standingHurt;
+  return centeredRect(fighter.x, fighter.y, box.width, box.height);
+}
+
+export function getHurtboxKind(fighter: Fighter): 'standing' | 'crouching' {
+  return fighter.state === 'crouch' || fighter.blockMode === 'crouching' ? 'crouching' : 'standing';
 }
 
 export function getAttackHitbox(fighter: Fighter): Rect | null {

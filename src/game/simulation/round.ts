@@ -1,7 +1,7 @@
 import { combatConfig } from '../config/combatConfig';
 import { intersects, isFacingAttacker } from './geometry';
 import { createFighter, getAttackHitbox, getCurrentAttackKind, getHurtbox, isActionLocked, isAttacking } from './fighters';
-import type { AttackKind, Fighter, FighterActions, FighterId, FighterState, RoundState } from './types';
+import type { AttackConfig, AttackKind, BlockMode, Fighter, FighterActions, FighterId, FighterState, RoundState } from './types';
 
 const fighterIds: FighterId[] = ['vix', 'carter'];
 
@@ -119,6 +119,8 @@ function updateFighter(fighter: Fighter, actions: FighterActions, deltaMs: numbe
     return;
   }
 
+  fighter.blockMode = getBlockMode(actions);
+
   const bufferedAttack = fighter.bufferedAttackMs > 0 ? fighter.bufferedAttack : null;
 
   if (bufferedAttack) {
@@ -128,7 +130,7 @@ function updateFighter(fighter: Fighter, actions: FighterActions, deltaMs: numbe
 
   if (actions.block && fighter.grounded) {
     fighter.vx = 0;
-    fighter.state = 'block';
+    fighter.state = fighter.blockMode === 'crouching' ? 'crouch' : 'block';
     fighter.stateTimerMs = 0;
     return;
   }
@@ -158,6 +160,14 @@ function updateFighter(fighter: Fighter, actions: FighterActions, deltaMs: numbe
   } else {
     fighter.state = 'idle';
   }
+}
+
+function getBlockMode(actions: FighterActions): BlockMode {
+  if (!actions.block) {
+    return 'none';
+  }
+
+  return actions.crouch ? 'crouching' : 'standing';
 }
 
 function applyGravity(fighter: Fighter, deltaMs: number): void {
@@ -309,11 +319,26 @@ function applyHit(round: RoundState, attacker: Fighter, defender: Fighter, attac
 }
 
 function canBlock(defender: Fighter, attacker: Fighter): boolean {
+  const attack = attacker.activeAttack;
+
+  if (!attack) {
+    return false;
+  }
+
   return (
-    defender.state === 'block' &&
+    defender.blockMode !== 'none' &&
     !isAttacking(defender) &&
+    canBlockAttack(defender.blockMode, combatConfig.attacks[attack]) &&
     isFacingAttacker(defender.facing, defender.x, attacker.x)
   );
+}
+
+function canBlockAttack(blockMode: BlockMode, attack: AttackConfig): boolean {
+  if (attack.height === 'mid') {
+    return blockMode === 'standing' || blockMode === 'crouching';
+  }
+
+  return false;
 }
 
 function clampStage(x: number): number {

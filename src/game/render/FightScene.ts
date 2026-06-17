@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { combatConfig } from '../config/combatConfig';
 import { InputMapper } from '../input/inputMapper';
-import { getAttackHitbox, getAttackPhase, getCollisionBox, getHurtbox, isAttacking } from '../simulation/fighters';
+import { getAttackHitbox, getAttackPhase, getCollisionBox, getHurtbox, getHurtboxKind } from '../simulation/fighters';
 import { createRoundState, updateRound } from '../simulation/round';
 import type { AttackKind, Fighter, RoundState } from '../simulation/types';
 import { renderDebugLog } from '../../ui/debugLog';
@@ -237,17 +237,22 @@ export class FightScene extends Phaser.Scene {
 
     const phase = getAttackPhase(fighter);
     const remaining = this.getStateRemainingMs(fighter);
-    const blockActive = fighter.state === 'block' && !isAttacking(fighter);
+    const attackHeight = fighter.activeAttack ? combatConfig.attacks[fighter.activeAttack].height : 'none';
+    const hurtbox = getHurtbox(fighter);
 
     text.setText([
       `state: ${fighter.state}`,
+      `grounded: ${fighter.grounded}`,
+      `crouching: ${fighter.state === 'crouch'}`,
       `phase: ${phase ?? 'none'} ${remaining}ms`,
+      `attackHeight: ${attackHeight}`,
+      `blockMode: ${fighter.blockMode}`,
+      `hurtbox: ${getHurtboxKind(fighter)}`,
       `hp: ${fighter.health}`,
-      `block: ${blockActive}`,
       `hitPause: ${Math.ceil(this.round.hitPauseMs)}`,
     ]);
     text.setOrigin(0.5, 1);
-    text.setPosition(fighter.x, fighter.y - combatConfig.boxes.hurt.height - 62);
+    text.setPosition(fighter.x, hurtbox.y - 28);
   }
 
   private getStateRemainingMs(fighter: Fighter): number {
