@@ -252,7 +252,7 @@ export class FightScene extends Phaser.Scene {
       `hitPause: ${Math.ceil(this.round.hitPauseMs)}`,
     ]);
     text.setOrigin(0.5, 1);
-    text.setPosition(fighter.x, hurtbox.y - 28);
+    text.setPosition(fighter.x + (fighter.id === 'vix' ? -34 : 34), hurtbox.y - 48);
   }
 
   private getStateRemainingMs(fighter: Fighter): number {
