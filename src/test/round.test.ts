@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createRoundState, updateRound } from '../game/simulation/round';
 
-const none = { left: false, right: false, jump: false, block: false, light: false, heavy: false };
+const none = { left: false, right: false, jump: false, crouch: false, block: false, light: false, heavy: false };
 
 describe('round simulation', () => {
   it('uses attack timing before damage applies', () => {
@@ -98,5 +98,33 @@ describe('round simulation', () => {
     expect(round.fighters.carter.flash.kind).toBe('block');
     expect(round.fighters.carter.health).toBe(98);
     expect(Math.abs(round.fighters.carter.vx)).toBeLessThan(80);
+  });
+
+  it('uses down as crouch instead of block', () => {
+    const round = createRoundState();
+
+    updateRound(round, 16, { vix: { ...none, crouch: true }, carter: none });
+
+    expect(round.fighters.vix.state).toBe('crouch');
+    expect(round.fighters.vix.vx).toBe(0);
+  });
+
+  it('requires the dedicated block action to block attacks', () => {
+    const round = createRoundState();
+    round.fighters.vix.x = 420;
+    round.fighters.carter.x = 462;
+
+    updateRound(round, 16, { vix: { ...none, light: true }, carter: { ...none, crouch: true } });
+    updateRound(round, 70, { vix: none, carter: { ...none, crouch: true } });
+    expect(round.fighters.carter.health).toBe(92);
+    expect(round.logs.at(-1)?.kind).toBe('HIT');
+
+    const blockingRound = createRoundState();
+    blockingRound.fighters.vix.x = 420;
+    blockingRound.fighters.carter.x = 462;
+    updateRound(blockingRound, 16, { vix: { ...none, light: true }, carter: { ...none, block: true } });
+    updateRound(blockingRound, 70, { vix: none, carter: { ...none, block: true } });
+    expect(blockingRound.fighters.carter.health).toBe(98);
+    expect(blockingRound.logs.at(-1)?.kind).toBe('BLOCK');
   });
 });

@@ -133,6 +133,13 @@ function updateFighter(fighter: Fighter, actions: FighterActions, deltaMs: numbe
     return;
   }
 
+  if (actions.crouch && fighter.grounded) {
+    fighter.vx = 0;
+    fighter.state = 'crouch';
+    fighter.stateTimerMs = 0;
+    return;
+  }
+
   if (actions.jump && fighter.grounded) {
     fighter.grounded = false;
     fighter.vy = combatConfig.movement.jumpVelocity;

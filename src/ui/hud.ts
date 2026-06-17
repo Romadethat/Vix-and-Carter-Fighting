@@ -5,7 +5,7 @@ export function renderHud(root: HTMLElement, round: RoundState): void {
   const vixHealth = healthPercent(round.fighters.vix.health);
   const carterHealth = healthPercent(round.fighters.carter.health);
   const status = round.winner ? `${round.fighters[round.winner].label} wins` : 'Phase 1 Prototype';
-  const restart = round.winner && round.koFreezeMs <= 0 ? 'Press R to restart' : 'H / F1 toggles debug';
+  const restart = round.winner && round.koFreezeMs <= 0 ? 'Press R to restart' : 'S/Down crouch - Shift block - H debug';
 
   root.innerHTML = `
     <div class="hud">

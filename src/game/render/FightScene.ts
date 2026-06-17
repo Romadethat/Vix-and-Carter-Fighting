@@ -157,12 +157,20 @@ export class FightScene extends Phaser.Scene {
       return combatConfig.poses.blockScaleX;
     }
 
+    if (fighter.state === 'crouch') {
+      return 1.08;
+    }
+
     return 1;
   }
 
   private getPoseScaleY(fighter: Fighter): number {
     if (fighter.state === 'hitstun') {
       return combatConfig.poses.hitstunScaleY;
+    }
+
+    if (fighter.state === 'crouch') {
+      return 0.72;
     }
 
     return 1;

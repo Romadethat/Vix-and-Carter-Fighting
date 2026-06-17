@@ -3,6 +3,7 @@ export type FighterId = 'vix' | 'carter';
 export type FighterState =
   | 'idle'
   | 'walk'
+  | 'crouch'
   | 'jump'
   | 'fall'
   | 'block'
@@ -30,6 +31,7 @@ export interface FighterActions {
   left: boolean;
   right: boolean;
   jump: boolean;
+  crouch: boolean;
   block: boolean;
   light: boolean;
   heavy: boolean;

@@ -4,6 +4,7 @@ const emptyActions = (): FighterActions => ({
   left: false,
   right: false,
   jump: false,
+  crouch: false,
   block: false,
   light: false,
   heavy: false,
@@ -29,7 +30,8 @@ export class InputMapper {
         left: this.pressed.has('KeyA'),
         right: this.pressed.has('KeyD'),
         jump: this.pressed.has('KeyW'),
-        block: this.pressed.has('KeyS'),
+        crouch: this.pressed.has('KeyS'),
+        block: this.pressed.has('ShiftLeft'),
         light: this.pressed.has('KeyF'),
         heavy: this.pressed.has('KeyG'),
       },
@@ -37,7 +39,8 @@ export class InputMapper {
         left: this.pressed.has('ArrowLeft'),
         right: this.pressed.has('ArrowRight'),
         jump: this.pressed.has('ArrowUp'),
-        block: this.pressed.has('ArrowDown'),
+        crouch: this.pressed.has('ArrowDown'),
+        block: this.pressed.has('ShiftRight'),
         light: this.pressed.has('KeyK'),
         heavy: this.pressed.has('KeyL'),
       },
@@ -55,7 +58,7 @@ export class InputMapper {
   }
 
   private readonly handleKeyDown = (event: KeyboardEvent): void => {
-    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'F1'].includes(event.code)) {
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'F1', 'ShiftLeft', 'ShiftRight'].includes(event.code)) {
       event.preventDefault();
     }
 
