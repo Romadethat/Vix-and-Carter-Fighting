@@ -9,7 +9,7 @@ if (!gameRoot) {
 }
 
 new Phaser.Game({
-  type: Phaser.AUTO,
+  type: Phaser.CANVAS,
   parent: gameRoot,
   width: 960,
   height: 640,

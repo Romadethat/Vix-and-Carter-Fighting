@@ -15,7 +15,6 @@ export class FightScene extends Phaser.Scene {
   private stateLabels = new Map<string, Phaser.GameObjects.Text>();
   private debugGraphics?: Phaser.GameObjects.Graphics;
   private debugVisible = false;
-  private debugWasPressed = false;
   private hudRoot!: HTMLElement;
   private debugRoot!: HTMLElement;
 
@@ -42,13 +41,9 @@ export class FightScene extends Phaser.Scene {
   }
 
   update(_time: number, delta: number): void {
-    const wantsDebug = this.inputMapper.wantsDebugToggle();
-
-    if (wantsDebug && !this.debugWasPressed) {
+    if (this.inputMapper.consumeDebugToggle()) {
       this.debugVisible = !this.debugVisible;
     }
-
-    this.debugWasPressed = wantsDebug;
 
     if (this.round.winner && this.round.koFreezeMs <= 0 && this.inputMapper.wantsRestart()) {
       this.round = createRoundState();
@@ -147,8 +142,9 @@ export class FightScene extends Phaser.Scene {
         this.strokeBox(hitbox, 0xff3d57);
       }
 
+      const arrowY = fighter.y - combatConfig.boxes.collision.height - 8;
       this.debugGraphics.lineStyle(3, 0xf4ca4f, 1);
-      this.debugGraphics.lineBetween(fighter.x, fighter.y - 132, fighter.x + fighter.facing * 28, fighter.y - 132);
+      this.debugGraphics.lineBetween(fighter.x, arrowY, fighter.x + fighter.facing * 28, arrowY);
       this.updateStateText(fighter);
     }
   }
@@ -166,6 +162,6 @@ export class FightScene extends Phaser.Scene {
     }
 
     text.setText(`${fighter.state} HP:${fighter.health}`);
-    text.setPosition(fighter.x - 34, fighter.y - combatConfig.boxes.hurt.height - 26);
+    text.setPosition(fighter.x - 40, fighter.y - combatConfig.boxes.hurt.height - 52);
   }
 }

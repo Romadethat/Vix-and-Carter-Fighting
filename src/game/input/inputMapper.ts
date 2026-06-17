@@ -11,6 +11,7 @@ const emptyActions = (): FighterActions => ({
 
 export class InputMapper {
   private readonly pressed = new Set<string>();
+  private debugToggleQueued = false;
 
   bind(): void {
     window.addEventListener('keydown', this.handleKeyDown);
@@ -47,13 +48,19 @@ export class InputMapper {
     return this.pressed.has('KeyR');
   }
 
-  wantsDebugToggle(): boolean {
-    return this.pressed.has('KeyH') || this.pressed.has('F1');
+  consumeDebugToggle(): boolean {
+    const queued = this.debugToggleQueued;
+    this.debugToggleQueued = false;
+    return queued;
   }
 
   private readonly handleKeyDown = (event: KeyboardEvent): void => {
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'F1'].includes(event.code)) {
       event.preventDefault();
+    }
+
+    if (event.code === 'KeyH' || event.code === 'F1') {
+      this.debugToggleQueued = true;
     }
 
     this.pressed.add(event.code);
