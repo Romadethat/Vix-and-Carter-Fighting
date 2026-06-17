@@ -1,15 +1,23 @@
+import Phaser from 'phaser';
 import './style.css';
-import { createRoundState } from './game/simulation/round';
-import { renderDebugLog } from './ui/debugLog';
-import { renderHud } from './ui/hud';
+import { FightScene } from './game/render/FightScene';
 
-const hudRoot = document.querySelector<HTMLElement>('#hud-root');
-const debugRoot = document.querySelector<HTMLElement>('#debug-log');
+const gameRoot = document.querySelector<HTMLElement>('#game-root');
 
-if (!hudRoot || !debugRoot) {
-  throw new Error('Missing app roots');
+if (!gameRoot) {
+  throw new Error('Missing game root');
 }
 
-const round = createRoundState();
-renderHud(hudRoot, round);
-renderDebugLog(debugRoot, round, true);
+new Phaser.Game({
+  type: Phaser.AUTO,
+  parent: gameRoot,
+  width: 960,
+  height: 640,
+  backgroundColor: '#18202b',
+  pixelArt: true,
+  scale: {
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+  },
+  scene: [FightScene],
+});
